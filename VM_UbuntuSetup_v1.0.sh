@@ -2,7 +2,7 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 1/9/2025
+# CHANGE DATE: 1/10/2025
 __version__="1.0"
 
 
@@ -32,6 +32,7 @@ PIP_FILENAME="pip-23.3.2.tar.gz"
 TENSORFLOW_URL="http://files-pythonhosted-org.vr.org/packages/e4/8a/0c38f712159d698e6216a4006bc91b31ce9c3412aaeae262b07f02db1174/tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 TENSORFLOW_FILENAME="tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
     
+# ===============================================================================================================================
 
 # Check Internet connection
 CheckInternet() {
@@ -41,7 +42,7 @@ CheckInternet() {
 # Ensure the user is running the script as root
 if [ "$EUID" -ne 0 ]; then 
     echo "⚠️ Please login as root to run this script"
-
+    
 else
     # Blacklist NVIDIA open-source VGA driver
     if [[ $(lsmod | grep nouveau) ]] && [[ ! $(grep -w 'blacklist nouveau' /etc/modprobe.d/blacklist.conf) ]]; then
@@ -58,8 +59,8 @@ else
     NETMASK='255.255.252.0'  # 22
     GATEWAY='192.168.4.7'
     DNS='10.241.96.14'
-    NIC=`ip a | grep -B1 'link/ether' | grep -v 'link/ether' | awk -F ': ' '{print $2}'`
-    NIC_NAME='Wired connection 1'
+    NIC=`ip a | grep -B1 'link/ether' | grep -v 'link/ether' | awk -F ': ' '{print $2}'` # ex: ens34
+    NIC_NAME=`nmcli connection | tail -1 | awk -F '  ' '{print $1}'` # Wired connection 1
     nmcli connection modify "$NIC_NAME" ipv4.method manual ipv4.addresses "$NEW_IP/22" ipv4.gateway "$GATEWAY" ipv4.dns "$DNS"
     nmcli connection down "$NIC_NAME" > /dev/null
     sleep 2
@@ -67,7 +68,7 @@ else
     CheckInternet
     echo -e "\n✅ Internet access is configured"
 	
-    # Set Taiwan time zone and reset NTP
+    # Set Taiwan local time zone and reset NTP
     timedatectl set-timezone Asia/Taipei
     timedatectl set-ntp 0 && sleep 1 && timedatectl set-ntp 1
 	
@@ -107,7 +108,7 @@ else
         echo "❌ Missing $((5-$FILE_COUNT)) file(s). Please check"
         exit 1
     else
-        echo -e "\n\e[32mAll the required files in $FILE_DIR found\e[0m\n"
+        echo -e "\n✅ All the 5 required files in $FILE_DIR found"
     fi
 
     # Extract tar files
@@ -141,13 +142,13 @@ else
         echo -e "\n✅ CUDA toolkit is installed"
     fi
 
-    # Install CUDNN (TODO: how to get CUDNN_DIR ?)
-    CUDNN_FILENAME="cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb"
+    # Install CUDNN
+    CUDNN_DIR_NAME=`echo $CUDNN_FILENAME | awk -F '_' '{print $1}'` # ex: cudnn-local-repo-ubuntu2004-8.6.0.163
     if [[ ! `dpkg -l | grep 'cudnn-local'` ]]; then
         dpkg -i $FILE_DIR/$CUDNN_FILENAME
-        CUDNN_DIR="/var/cudnn-local-repo-ubuntu2004-8.6.0.163"
-        CUDNN_DEB_VER=`ls $CUDNN_DIR/libcudnn* | awk -F '_' '{print $2}' | tail -1`  # ex: 8.6.0.163-1+cuda11.8
-        cp $CUDNN_DIR/cudnn-local*keyring.gpg /usr/share/keyrings/  # ex: cudnn-local-B0FE0A41-keyring.gpg
+        CUDNN_PATH="/var/$CUDNN_DIR_NAME"
+        CUDNN_DEB_VER=`ls $CUDNN_PATH/libcudnn* | awk -F '_' '{print $2}' | tail -1`  # ex: 8.6.0.163-1+cuda11.8
+        cp $CUDNN_PATH/cudnn-local*keyring.gpg /usr/share/keyrings/  # ex: cudnn-local-B0FE0A41-keyring.gpg
         apt update
         apt install libcudnn8=$CUDNN_DEB_VER libcudnn8-dev=$CUDNN_DEB_VER libcudnn8-samples=$CUDNN_DEB_VER -y
     else
@@ -159,7 +160,7 @@ else
     cd $HOME/cudnn_samples*/mnistCUDNN
     for lib in libfreeimage3 libfreeimage-dev; do
         if ! dpkg -l | grep "$lib" > /dev/null; then
-            apt install $lib -y || echo -e "\n❌ Error installing $lib"
+            apt install $lib -y || echo -e "\n❌ Error installing $lib" && exit 1
         fi
     done
     make clean && make
@@ -177,8 +178,10 @@ else
     if [[ $? == 0 ]]; then
         echo -e "\n✅ Tensorflow module can be imported successfully"
     else
-        echo -e "\n❌ Tensorflow module can't be imported successfully"
+        echo -e "\n❌ Tensorflow module can't be imported successfully" && exit 1
     fi
+    echo -e "\n\e[32mAll set! You are okay to go :)\e[0m\n"
 fi
+
 exit
 
