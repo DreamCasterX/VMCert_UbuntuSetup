@@ -2,13 +2,17 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 1/10/2025
+# CHANGE DATE: 2/11/2025
 __version__="1.0"
 
 
 # **Quick setup for Ubuntu VM environment of VMWare Cert testing**
 
-# Define Tool download link and filename (*Manually change any of the settings based on your requirements)
+
+
+# User-defined settings
+TIME_ZONE='Asia/Taipei'
+
 # [CUDA Toolkit source page] https://developer.nvidia.com/cuda-11-8-0-download-archive
 CUDA_URL="https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run"
 CUDA_FILENAME="cuda_11.8.0_520.61.05_linux.run"
@@ -68,8 +72,9 @@ else
     CheckInternet
     echo -e "\n✅ Internet access is configured"
 	
-    # Set Taiwan local time zone and reset NTP
-    timedatectl set-timezone Asia/Taipei
+    # Set local time zone and reset NTP
+    timedatectl set-timezone $TIME_ZONE
+    ln -sf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime
     timedatectl set-ntp 0 && sleep 1 && timedatectl set-ntp 1
 	
     # Install required libraries
