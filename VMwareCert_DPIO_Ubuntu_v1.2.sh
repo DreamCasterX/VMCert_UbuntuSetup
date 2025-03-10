@@ -2,8 +2,8 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 3/6/2025
-__version__="1.1"
+# CHANGE DATE: 3/10/2025
+__version__="1.2"
 
 
 # **Quick setup for Ubuntu VM environment of VMWare Cert testing**
@@ -12,7 +12,8 @@ __version__="1.1"
 # User-defined settings
 FILE_DIR="/root/Downloads"
 TIME_ZONE='Asia/Taipei'
-NETMASK='22'  # 255.255.252.0
+NETMASK='255.255.252.0'
+NETMASK_CIDR='22'
 GATEWAY='192.168.4.7'
 DNS='10.241.96.14'
 
@@ -44,6 +45,10 @@ TENSORFLOW_FILENAME="tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux
     
 
 
+# Color settings
+yellow='\e[93m'
+nc='\e[0m'
+
 
 # Check Internet connection
 CheckInternet() {
@@ -61,8 +66,12 @@ fi
 timedatectl set-timezone $TIME_ZONE
 ln -sf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime
 timedatectl set-ntp 0 && sleep 1 && timedatectl set-ntp 1
-    
-    
+
+
+echo "╭─────────────────────────────────────────────────╮"
+echo "│   VMware Certification Test Environment Setup   │"
+echo "│       GPU VMDirectPath I/O (DPIO) - Ubuntu      │"
+echo "╰─────────────────────────────────────────────────╯"
 # Blacklist NVIDIA open-source VGA driver
 echo
 echo "----------------------------------"
@@ -74,7 +83,7 @@ if [[ $(lsmod | grep nouveau) ]] && [[ ! $(grep -w 'blacklist nouveau' /etc/modp
     update-initramfs -u
     [[ $? == 0 ]] && systemctl reboot || { echo "❌ Failed to blacklist NV driver"; exit 1; }
 else
-    echo -e "\n✅ Nouveau driver is blacklisted"
+    echo -e "\n✅ Nouveau driver is blacklisted\n"
 fi
 	
   
@@ -84,16 +93,89 @@ echo "--------------------------"
 echo "CONFIG INTERNET NETWORK..."
 echo "--------------------------"
 echo
-read -p "  Enter the IP address to access Internet: " NEW_IP  # ex: 192.168.7.130
-NIC=`ip a | grep -B1 'link/ether' | grep -v 'link/ether' | awk -F ': ' '{print $2}'`  # ex: ens34
-NIC_NAME=`nmcli connection | tail -1 | awk -F '  ' '{print $1}'` # Wired connection 1        
-if ! nmcli connection modify "$NIC_NAME" ipv4.method manual ipv4.addresses "$NEW_IP"/"$NETMASK" ipv4.gateway "$GATEWAY" ipv4.dns "$DNS" 2>/dev/null; then
-    echo -e "\n❌ Failed to configure network interface!"
-    exit 1
+NIC=`ip a | grep -B1 'link/ether' | grep -v 'link/ether' | awk -F ': ' '{print $2}'`  # ex: ens34 (assuming only one NIC exposed)
+NIC_NAME=`nmcli connection | grep 'ethernet' | tail -1 | awk -F '  ' '{print $1}'` # ex: Wired connection 1  (assuming only one NIC exposed)  
+CUR_IP=`nmcli connection show "$NIC_NAME" | grep "ipv4.addresses:" | awk '{print $2}' | cut -d "/" -f1`
+CUR_NETMASK_CIDR=`nmcli connection show "$NIC_NAME" | grep "ipv4.addresses:" | awk '{print $2}' | cut -d "/" -f2`
+# Convert CIDR format to traditional format
+convert_cidr_to_mask() {
+    local cidr=$1
+    local mask=""
+    if ! [[ "$cidr" =~ ^[0-9]+$ ]]; then
+        echo "--"
+        return
+    fi 
+    local full_octets=$(($cidr / 8))
+    local remainder_bits=$(($cidr % 8))
+    for ((i=0; i<$full_octets; i++)); do
+        mask="$mask.255"
+    done
+    if [ $remainder_bits -gt 0 ]; then
+        local remainder_mask=$((256 - 2**(8-$remainder_bits)))
+        mask="$mask.$remainder_mask"
+    fi
+    for ((i=$full_octets+($remainder_bits>0?1:0); i<4; i++)); do
+        mask="$mask.0"
+    done
+    echo ${mask:1}
+}
+CUR_NETMASK=$(convert_cidr_to_mask $CUR_NETMASK_CIDR)
+CUR_GATEWAY=`nmcli connection show "$NIC_NAME" | grep "ipv4.gateway:" | awk '{print $2}'`
+CUR_DNS=`nmcli connection show "$NIC_NAME" | grep "ipv4.dns:" | awk '{print $2}'`
+
+echo -e "NIC: ${yellow}"$NIC"${nc}"
+echo -e "IP: ${yellow}"$CUR_IP"${nc}"
+echo -e "Netmask: ${yellow}"$CUR_NETMASK"${nc}" 
+echo -e "Gateway: ${yellow}"$CUR_GATEWAY"${nc}"
+echo -e "DNS: ${yellow}"$CUR_DNS"${nc}"
+echo 
+
+read -p "Use the current network settings? (y/n) " ans
+while [[ "$ans" != [YyNn] ]]; do 
+    read -p "Use the current network settings? (y/n) " ans
+done
+
+if [[ "$ans" == [Nn] ]]; then
+    read -p "  Input IP address: " NEW_IP  # ex: 192.168.7.130
+    read -p "  Input Netmask <press Enter to accept default: $NETMASK>: " NEW_NETMASK
+    if [[ -z "$NEW_NETMASK" ]]; then
+        NEW_NETMASK=$NETMASK_CIDR
+    elif [[ $NEW_NETMASK =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        # Convert traditional netmask to CIDR format
+        case $NEW_NETMASK in
+            "255.255.255.0") NEW_NETMASK="24" ;;
+            "255.255.254.0") NEW_NETMASK="23" ;;
+            "255.255.252.0") NEW_NETMASK="22" ;;
+            "255.255.248.0") NEW_NETMASK="21" ;;
+            "255.255.240.0") NEW_NETMASK="20" ;;
+            "255.255.224.0") NEW_NETMASK="19" ;;
+            "255.255.192.0") NEW_NETMASK="18" ;;
+            "255.255.128.0") NEW_NETMASK="17" ;;
+            "255.255.0.0")   NEW_NETMASK="16" ;;
+            "255.0.0.0")     NEW_NETMASK="8" ;;
+            *) echo "Unrecognized netmask format. Using default: $NETMASK"
+               NEW_NETMASK=$NETMASK_CIDR ;;
+        esac
+    fi
+    read -p "  Input Gateway <press Enter to accept default: $GATEWAY>: " NEW_GATEWAY
+    if [[ -z "$NEW_GATEWAY" ]]; then
+        NEW_GATEWAY=$GATEWAY
+    fi
+    read -p "  Input DNS <press Enter to accept default: $DNS>: " NEW_DNS
+    if [[ -z "$NEW_DNS" ]]; then
+        NEW_DNS=$DNS
+    fi
+
+    # Set up connection
+    if ! nmcli connection modify "$NIC_NAME" ipv4.method manual ipv4.addresses "$NEW_IP"/"$NEW_NETMASK" ipv4.gateway "$NEW_GATEWAY" ipv4.dns "$NEW_DNS" 2>/dev/null; then
+        echo -e "\n❌ Failed to configure network interface!"
+        exit 1
+    fi
+    nmcli connection down "$NIC_NAME" > /dev/null
+    sleep 2
+    nmcli connection up "$NIC_NAME" > /dev/null
 fi
-nmcli connection down "$NIC_NAME" > /dev/null
-sleep 2
-nmcli connection up "$NIC_NAME" > /dev/null
+
 CheckInternet
 echo -e "\n✅ Internet access is configured"
 
