@@ -137,7 +137,7 @@ done
 
 if [[ "$ans" == [Nn] ]]; then
     read -p "  Input IP address: " NEW_IP  # ex: 192.168.7.130
-    read -p "  Input Netmask <press Enter to accept default: [$NETMASK]>: " NEW_NETMASK
+    read -p "  Input Netmask <press Enter to accept default [$NETMASK]>: " NEW_NETMASK
     if [[ -z "$NEW_NETMASK" ]]; then
         NEW_NETMASK=$NETMASK_CIDR
     elif [[ $NEW_NETMASK =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -153,15 +153,15 @@ if [[ "$ans" == [Nn] ]]; then
             "255.255.128.0") NEW_NETMASK="17" ;;
             "255.255.0.0")   NEW_NETMASK="16" ;;
             "255.0.0.0")     NEW_NETMASK="8" ;;
-            *) echo "Unrecognized netmask format. Using default: [$NETMASK]"
+            *) echo "Unrecognized netmask format. Using default [$NETMASK]"
                NEW_NETMASK=$NETMASK_CIDR ;;
         esac
     fi
-    read -p "  Input Gateway <press Enter to accept default: [$GATEWAY]>: " NEW_GATEWAY
+    read -p "  Input Gateway <press Enter to accept default [$GATEWAY]>: " NEW_GATEWAY
     if [[ -z "$NEW_GATEWAY" ]]; then
         NEW_GATEWAY=$GATEWAY
     fi
-    read -p "  Input DNS <press Enter to accept default: [$DNS]>: " NEW_DNS
+    read -p "  Input DNS <press Enter to accept default [$DNS]>: " NEW_DNS
     if [[ -z "$NEW_DNS" ]]; then
         NEW_DNS=$DNS
     fi
