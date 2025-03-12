@@ -95,8 +95,8 @@ echo "--------------------------"
 echo
 NIC=`ip a | grep -B1 'link/ether' | grep -v 'link/ether' | awk -F ': ' '{print $2}'`  # ex: ens34 (assuming only one NIC exposed)
 NIC_NAME=`nmcli connection | grep 'ethernet' | tail -1 | awk -F '  ' '{print $1}'` # ex: Wired connection 1  (assuming only one NIC exposed)  
-CUR_IP=`nmcli connection show "$NIC_NAME" | grep "ipv4.addresses:" | awk '{print $2}' | cut -d "/" -f1`
-CUR_NETMASK_CIDR=`nmcli connection show "$NIC_NAME" | grep "ipv4.addresses:" | awk '{print $2}' | cut -d "/" -f2`
+CUR_IP=`nmcli connection show "$NIC_NAME" | grep "IP4.ADDRESS\[1\]:" | awk '{print $2}' | cut -d "/" -f1` 
+CUR_NETMASK_CIDR=`nmcli connection show "$NIC_NAME" | grep "IP4.ADDRESS\[1\]:" | awk '{print $2}' | cut -d "/" -f2`  
 # Convert CIDR format to traditional format
 convert_cidr_to_mask() {
     local cidr=$1
