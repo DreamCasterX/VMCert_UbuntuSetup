@@ -2,11 +2,11 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 3/10/2025
+# CHANGE DATE: 3/13/2025
 __version__="1.2"
 
 
-# **Quick setup for Ubuntu VM environment of VMWare Cert testing**
+# Quick Setup For VMWare GPU DPIO (Direct Path I/O) Cert Testing - Ubuntu Environment
 
 
 # User-defined settings
@@ -16,33 +16,34 @@ NETMASK='255.255.252.0'
 NETMASK_CIDR='22'
 GATEWAY='192.168.4.7'
 DNS='10.241.96.14'
-
-
-
-# [CUDA Toolkit source page] https://developer.nvidia.com/cuda-11-8-0-download-archive
-CUDA_URL="https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run"
-CUDA_FILENAME="cuda_11.8.0_520.61.05_linux.run"
 CUDA_VER="11.8"
-
-# [CUDNN source page 1] https://developer.nvidia.com/rdp/cudnn-archive (*need NV account) 
-# [CUDNN source page 2] https://developer.download.nvidia.com/compute/redist/cudnn
-CUDNN_URL="https://developer.download.nvidia.com/compute/redist/cudnn/v8.6.0/local_installers/11.8/cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb"
-CUDNN_FILENAME="cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb"
-    
-# [NV vGPU Driver source page] https://docs.nvidia.com/vgpu/latest/grid-vgpu-release-notes-ubuntu/index.html (*need NV account) 
-NV_DRIVER_URL="https://alist.geekxw.top/d/NVIDIA-GRID-Linux-KVM-550.127.06-550.127.05-553.24/Guest_Drivers/nvidia-linux-grid-550_550.127.05_amd64.deb?sign=KoqcPNr1rTPnideVdfdLuV_upkkk9YYI4DF6QYI208o=:0"
-NV_DRIVER_FILENAME="nvidia-linux-grid-550_550.127.05_amd64.deb"
-    
-# [PIP source page] https://pypi.org/project/pip/#history
-PIP_URL="https://files.pythonhosted.org/packages/b7/06/6b1ad0ae8f97d7a0d6f6ad640db10780578999e647a9593512ceb6f06469/pip-23.3.2.tar.gz" 
-PIP_FILENAME="pip-23.3.2.tar.gz"
 PIP_DIR="pip-23.3.2"
-   
-# [Tensorflow source page 1] https://tensorflow.google.cn/install/source?hl=zh-tw#linux
-# [Tensorflow source page 2] http://104.225.11.179/project/tensorflow/2.12.0/#files
-TENSORFLOW_URL="http://files-pythonhosted-org.vr.org/packages/e4/8a/0c38f712159d698e6216a4006bc91b31ce9c3412aaeae262b07f02db1174/tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-TENSORFLOW_FILENAME="tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-    
+
+
+# Download URLs
+urls=(
+  # CUDA Toolkit
+  # Source: https://developer.nvidia.com/cuda-11-8-0-download-archive
+  'https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run'
+  
+  # CUDNN
+  # Source1: https://developer.nvidia.com/rdp/cudnn-archive (*need NV account) 
+  # Source2: https://developer.download.nvidia.com/compute/redist/cudnn
+  'https://developer.download.nvidia.com/compute/redist/cudnn/v8.6.0/local_installers/11.8/cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb'
+  
+  # NV vGPU Driver
+  # Source: https://docs.nvidia.com/vgpu/latest/grid-vgpu-release-notes-ubuntu/index.html (*need NV account) 
+  'https://alist.geekxw.top/d/NVIDIA-GRID-Linux-KVM-550.127.06-550.127.05-553.24/Guest_Drivers/nvidia-linux-grid-550_550.127.05_amd64.deb?sign=KoqcPNr1rTPnideVdfdLuV_upkkk9YYI4DF6QYI208o=:0'
+  
+  # PIP 
+  # Source: https://pypi.org/project/pip/#history
+  'https://files.pythonhosted.org/packages/b7/06/6b1ad0ae8f97d7a0d6f6ad640db10780578999e647a9593512ceb6f06469/pip-23.3.2.tar.gz'
+  
+  # Tensorflow
+  # Source1: https://tensorflow.google.cn/install/source?hl=zh-tw#linux  
+  # Source2: http://104.225.11.179/project/tensorflow/2.12.0/#files
+  'http://files-pythonhosted-org.vr.org/packages/e4/8a/0c38f712159d698e6216a4006bc91b31ce9c3412aaeae262b07f02db1174/tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+)
 
 
 # Color settings
@@ -200,26 +201,18 @@ echo "-----------------"
 echo "DOWNLOAD TOOLS..."
 echo "-----------------"
 echo
-for file in $CUDA_FILENAME $CUDNN_FILENAME $NV_DRIVER_FILENAME $PIP_FILENAME $TENSORFLOW_FILENAME; do
-    if [[ ! -f "$FILE_DIR/$file" ]]; then
-        if [[ $file == $CUDA_FILENAME ]]; then
-            wget -P $FILE_DIR $CUDA_URL && echo -e "\n✅ Cuda toolkit is downloaded" || { echo -e "\n❌ Downloading Cuda toolkit failed"; exit 1; } 
-        fi
-        if [[ $file == $CUDNN_FILENAME ]]; then
-            wget -P $FILE_DIR $CUDNN_URL && echo -e "\n✅ cuDNN is downloaded" || { echo -e "\n❌ Downloading cuDNN failed"; exit 1; }
-        fi
-        if [[ $file == $NV_DRIVER_FILENAME ]]; then
-            wget -P $FILE_DIR -O $FILE_DIR/$NV_DRIVER_FILENAME $NV_DRIVER_URL && echo -e "\n✅ NV vGPU driver is downloaded" || { echo -e "\n❌ Downloading NV vGPU driver failed"; exit 1; } 
-        fi
-        if [[ $file == $PIP_FILENAME ]]; then
-            wget -P $FILE_DIR $PIP_URL && echo -e "\n✅ Pip is downloaded" || { echo -e "\n❌ Downloading pip failed"; exit 1; }
-        fi
-        if [[ $file == $TENSORFLOW_FILENAME ]]; then
-            wget -P $FILE_DIR $TENSORFLOW_URL && echo -e "\n✅ Tensorflow is downloaded" || { echo -e "\n❌ Downloading tensorflow failed"; exit 1; } 
-        fi
-    fi
+if [[ ! -d "$FILE_DIR" ]]; then
+  mkdir -p "$FILE_DIR"
+fi
+for url in "${urls[@]}"; do
+  filename=$(basename "$url")
+  if [[ ! -f "$FILE_DIR/$filename" ]]; then
+    wget -P "$FILE_DIR" "$url" && echo -e "✅ \"$filename\" is downloaded" || { echo -e "\n❌ Downloading \"$filename\" failed (error code: $?)"; exit 1; }
+  else
+    echo -e "✅ \"$filename\" already exists, skipping download."
+  fi
 done
-   
+
 
 # Check if all files exist (except for the extracted pip folder)
 FILE_COUNT=$(find $FILE_DIR -maxdepth 1 -type f -not -path "$FILE_DIR/$PIP_DIR*" | wc -l)
