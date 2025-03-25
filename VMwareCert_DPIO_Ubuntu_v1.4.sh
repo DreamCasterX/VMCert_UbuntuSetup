@@ -2,8 +2,8 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 3/24/2025
-__version__="1.3"
+# CHANGE DATE: 3/25/2025
+__version__="1.4"
 
 
 # Quick Setup For VMWare GPU DPIO (Direct Path I/O) Cert Testing - Ubuntu Environment
@@ -204,7 +204,7 @@ for lib in dkms python3-setuptools; do
     apt update && apt install $lib -y || { echo "❌ Failed to install $lib"; exit 1; }
 fi
 done
-echo -e "\n✅ Python setuptools and dkms installed"
+echo -e "\n✅ Python setuptools and dkms already installed"
 	
     
 # Download Cuda/Cudnn/Driver/pip/tensorflow
@@ -238,7 +238,7 @@ done
 
 
 # Check if all files exist (except for the extracted pip folder)
-FILE_COUNT=$(find $FILE_DIR -maxdepth 1 -type f -not -path "$FILE_DIR/$PIP_DIR*" | wc -l)
+FILE_COUNT=$(find $FILE_DIR -maxdepth 1 -type f | wc -l)
 if [[ $FILE_COUNT != 5 ]]; then
     echo "❌ Missing $((5-$FILE_COUNT)) file(s). Please check"
     exit 1
@@ -255,7 +255,7 @@ if [[ ! `pip -V` ]]; then
     find "$FILE_DIR" -maxdepth 1 -type d -name "pip-*" | xargs -I {} bash -c 'cd {}; python3 setup.py install' \;
     python3 -m pip install --upgrade pip
 else
-    echo -e "\n✅ PIP package is installed"
+    echo -e "\n✅ PIP package is already installed"
 fi
 
 
@@ -270,13 +270,16 @@ if [[ ! `lsmod | grep -i nvidia` ]]; then
         dpkg -i $FILE_DIR/$NV_DRIVER_FILENAME
         [[ $? == 0 ]] && systemctl reboot || { echo -e "\n❌ Failed to install NV driver"; exit 1; }
     fi
-else
-    echo -e "\n✅ NV vGPU driver is installed"
 fi
-    
+echo -e "\n✅ NV vGPU driver is already installed"
 
 
 # Install CUDA toolkit
+echo
+echo "-----------------------"
+echo "INSTALL CUDA TOOLKIT..."
+echo "-----------------------"
+echo
 if command -v nvcc &> /dev/null; then
     CUDA_INSTALLED=true
 else
@@ -321,8 +324,14 @@ if [[ ! `dpkg -l | grep 'cudnn-local'` ]]; then
     cp $CUDNN_PATH/cudnn-local*keyring.gpg /usr/share/keyrings/  # ex: cudnn-local-B0FE0A41-keyring.gpg
     apt update
     apt install libcudnn8=$CUDNN_DEB_VER libcudnn8-dev=$CUDNN_DEB_VER libcudnn8-samples=$CUDNN_DEB_VER -y
+    if [[ $? != 0 ]]; then
+        echo -e "\n❌ Failed to install cuDNN libraries"
+        exit 1
+    else
+        echo -e "\n✅ cuDNN installed successfully"
+    fi
 else
-    echo -e "\n✅ cuDNN is installed"
+    echo -e "\n✅ cuDNN is already installed"
 fi
     
     
@@ -349,9 +358,11 @@ if ! pip list | grep "tensorflow" > /dev/null; then
     if [[ $? != 0 ]]; then
         echo -e "\n❌ Failed to install Tensorflow module"
         exit 1
+    else
+        echo -e "\n✅ Tensorflow module installed successfully"
     fi
 else
-    echo -e "\n✅ Tensorflow module is installed"
+    echo -e "\n✅ Tensorflow module is already installed"
 fi
 
 
