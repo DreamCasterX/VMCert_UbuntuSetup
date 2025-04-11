@@ -2,8 +2,8 @@
 
 
 # CREATOR: Mike Lu (klu7@lenovo.com)
-# CHANGE DATE: 4/10/2025
-__version__="1.5"
+# CHANGE DATE: 4/12/2025
+__version__="1.6"
 
 
 # Quick Setup For VMWare GPU DPIO (Direct Path I/O) Cert Testing - Ubuntu Environment
@@ -40,7 +40,7 @@ DNS='10.241.96.14'
 # File URLs
 CUDA_URL="https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_520.61.05_linux.run"
 CUDNN_URL="https://developer.download.nvidia.com/compute/redist/cudnn/v8.6.0/local_installers/11.8/cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb"
-NV_DRIVER_URL="https://download1324.mediafire.com/3ygby7su5d8gAWMlOrKrXicR6d4j2oqrUFpIfcYIaTq1QYsddFAaaLcFKGRDAWUKbFlsiLSm0nFhdFCI8LSskLqMQ44fBrpc07_7mNnkX4Z1I-d5Dw62ZU_3MBHDHw_eNIZLLWkbzP45pBp0_lmo6xhi0SBv5D0dWOECltz6cA/a4c1exxbj74fgxp/nvidia-linux-grid-550_550.127.05_amd64.deb"
+NV_DRIVER_URL="https://alist.geekxw.top/d/NVIDIA-GRID-Linux-KVM-550.144.02-550.144.03-553.62/Guest_Drivers/nvidia-linux-grid-550_550.144.03_amd64.deb?sign=2m4OtErHE7Q3K1b-bbEzf-muDibgbR4hDFVRq1SqT0o=:0"
 PIP_URL="https://files.pythonhosted.org/packages/b7/06/6b1ad0ae8f97d7a0d6f6ad640db10780578999e647a9593512ceb6f06469/pip-23.3.2.tar.gz" 
 TENSORFLOW_URL="http://files-pythonhosted-org.vr.org/packages/e4/8a/0c38f712159d698e6216a4006bc91b31ce9c3412aaeae262b07f02db1174/tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
@@ -48,7 +48,7 @@ TENSORFLOW_URL="http://files-pythonhosted-org.vr.org/packages/e4/8a/0c38f712159d
 # File names
 CUDA_FILENAME="cuda_11.8.0_520.61.05_linux.run"
 CUDNN_FILENAME="cudnn-local-repo-ubuntu2004-8.6.0.163_1.0-1_amd64.deb"
-NV_DRIVER_FILENAME="nvidia-linux-grid-550_550.127.05_amd64.deb"
+NV_DRIVER_FILENAME="nvidia-linux-grid-550_550.144.03_amd64.deb"
 PIP_FILENAME="pip-23.3.2.tar.gz"
 TENSORFLOW_FILENAME="tensorflow-2.12.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
